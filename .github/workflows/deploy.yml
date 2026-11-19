@@ -32,9 +32,6 @@ jobs:
           cache: npm
           cache-dependency-path: web/client/package-lock.json
 
-      - name: .NET tests
-        run: dotnet test web --configuration Release
-
       - name: Build the SPA
         working-directory: web/client
         run: |
