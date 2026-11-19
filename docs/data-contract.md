@@ -128,9 +128,9 @@ table userpaths, row (trip, <id>)     Storage:Kind = Azure
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "id": "3f2b9c0d4e5a46b7a8c9d0e1f2a3b4c5",
-  "day_number": 2,
+  "route_number": 2,
   "origin": "Tarangire Gate",
   "destination": "Silale Swamp",
   "stops": [{"lat": -3.7167, "lng": 36.0167}, {"lat": -4.0, "lng": 36.08}],
@@ -143,15 +143,15 @@ table userpaths, row (trip, <id>)     Storage:Kind = Azure
 
 | Field | Meaning |
 |---|---|
-| `version` | Format version, 1 |
+| `version` | Format version, 2. Version 1 called `route_number` `day_number` (column `DayNumber`); both are still read. |
 | `id` | 32 lowercase hex digits, also the file name |
-| `day_number` | Trip day, 1 to 60. The date is the departure date + `day_number` − 1, chosen in the UI. |
+| `route_number` | The route the path belongs to, 1 to 60. The UI groups paths by it; it is not a day or a date. |
 | `origin`, `destination` | Place names, 1 to 120 characters |
 | `stops` | 2 to 27 points (WGS84) the driving route passes, in order: origin first, destination last. The road itself comes from Google directions and isn't stored. |
 | `surface_type` | `paved`, `gravel` or `track` (the user's choice) |
 | `distance_km`, `duration_min` | As entered by the user |
-| `created_at` | When the API saved it. Paths of the same day are listed in this order. |
+| `created_at` | When the API saved it. Paths of the same route are listed in this order. |
 
 - Each file is written to a temp file (`.<id>.<random>.tmp`) and renamed. Readers skip files whose name isn't a slug, and files that don't parse.
-- **As a table row** (`Azure`): `PartitionKey` = `trip`, `RowKey` = `id`, and the columns `Version`, `DayNumber`, `Origin`, `Destination`, `Stops`, `SurfaceType`, `DistanceKm`, `DurationMin`, `CreatedAt` hold the fields above. `Stops` is the `stops` array as a JSON string (a column can't hold a list). Rows that don't parse are skipped.
+- **As a table row** (`Azure`): `PartitionKey` = `trip`, `RowKey` = `id`, and the columns `Version`, `RouteNumber`, `Origin`, `Destination`, `Stops`, `SurfaceType`, `DistanceKm`, `DurationMin`, `CreatedAt` hold the fields above. `Stops` is the `stops` array as a JSON string (a column can't hold a list). Rows that don't parse are skipped.
 - The API returns these as `camelCase` from `GET /api/user-paths`.

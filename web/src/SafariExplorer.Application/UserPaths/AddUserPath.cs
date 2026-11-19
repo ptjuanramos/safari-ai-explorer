@@ -14,7 +14,7 @@ public sealed class AddUserPath(IUserPathRepository repository, TimeProvider clo
     {
         var path = new UserPath(
             Id: Guid.NewGuid().ToString("N"),
-            DayNumber: draft.DayNumber,
+            RouteNumber: draft.RouteNumber,
             Origin: draft.Origin!.Trim(),
             Destination: draft.Destination!.Trim(),
             Stops: draft.Stops!,

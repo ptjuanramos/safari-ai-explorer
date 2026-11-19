@@ -41,7 +41,7 @@ export function ItinerarySidebar({
   }, [segments]);
 
   const maxRounterNumber = segments.reduce((m, s) => Math.max(m, s.routeNumber), 0);
-  const defaultDay = Math.max(1, maxRounterNumber + 1);
+  const defaultRouteNumber = Math.max(1, maxRounterNumber + 1);
 
   return (
     <aside className="flex h-full w-[340px] shrink-0 flex-col border-r border-border bg-sidebar">
@@ -57,7 +57,7 @@ export function ItinerarySidebar({
       <div className="border-b border-border px-4 py-3">
         {adding ? (
           <AddRouteForm
-            defaultDay={defaultDay}
+            defaultRouteNumber={defaultRouteNumber}
             onAdd={async (input) => {
               await onAddSegment(input);
               setAdding(false);

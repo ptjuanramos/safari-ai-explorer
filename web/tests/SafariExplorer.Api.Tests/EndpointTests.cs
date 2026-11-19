@@ -170,7 +170,7 @@ public sealed class EndpointTests : IDisposable
         var client = _factory.CreateClient();
         var body = new
         {
-            dayNumber = 1,
+            routeNumber = 1,
             origin = "Tarangire Gate",
             destination = "Silale Swamp",
             stops = new[] { new { lat = -3.7167, lng = 36.0167 }, new { lat = -4.0, lng = 36.08 } },
@@ -203,7 +203,7 @@ public sealed class EndpointTests : IDisposable
     {
         var response = await _factory.CreateClient().PostAsJsonAsync("/api/user-paths", new
         {
-            dayNumber = 1,
+            routeNumber = 1,
             origin = "A",
             destination = "B",
             stops = new[] { new { lat = -3.7, lng = 36.0 } },

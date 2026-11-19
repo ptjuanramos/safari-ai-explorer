@@ -36,10 +36,31 @@ public sealed class FileUserPathRepositoryTests : IDisposable
         Assert.Equal(Path1().Stops, read.Stops);
 
         var json = await File.ReadAllTextAsync(Path.Combine(Folder, "0123abcd.json"));
-        Assert.Contains("\"day_number\":2", json);
-        Assert.Contains("\"version\":1", json);
+        Assert.Contains("\"route_number\":2", json);
+        Assert.Contains("\"version\":2", json);
+        Assert.DoesNotContain("day_number", json);
         Assert.Contains("\"lat\":-3.7167", json);
         Assert.Equal(["0123abcd.json"], Directory.GetFiles(Folder).Select(Path.GetFileName));
+    }
+
+    [Fact]
+    public async Task A_version_1_file_with_day_number_still_reads_as_the_route_number()
+    {
+        Directory.CreateDirectory(Folder);
+        await File.WriteAllTextAsync(Path.Combine(Folder, "0123abcd.json"), """
+            {"version": 1, "id": "0123abcd", "day_number": 2, "origin": "Tarangire Gate", "destination": "Silale Swamp",
+             "stops": [{"lat": -3.7167, "lng": 36.0167}, {"lat": -4.0, "lng": 36.08}], "surface_type": "track",
+             "distance_km": 42.5, "duration_min": 95, "created_at": "2026-11-18T09:30:00+00:00"}
+            """);
+        await File.WriteAllTextAsync(Path.Combine(Folder, "4567cdef.json"), """
+            {"version": 2, "id": "4567cdef", "origin": "Kuro", "destination": "Silale Swamp",
+             "stops": [{"lat": -3.7167, "lng": 36.0167}, {"lat": -4.0, "lng": 36.08}], "surface_type": "track",
+             "distance_km": 42.5, "duration_min": 95, "created_at": "2026-11-18T09:30:00+00:00"}
+            """);
+
+        var read = Assert.Single(await Repository.ListAsync(CancellationToken.None));
+        Assert.Equal(2, read.RouteNumber);
+        Assert.Equal("0123abcd", read.Id);
     }
 
     [Fact]

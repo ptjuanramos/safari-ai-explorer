@@ -5,14 +5,14 @@ import type { SurfaceType } from '@/types/trip';
 import { PlaceAutocompleteField } from './PlaceAutocompleteField';
 
 interface Props {
-  defaultDay: number;
+  defaultRouteNumber: number;
   /** Saves the path; rejects when the API refuses it, and the form then stays open with the error. */
   onAdd: (input: NewSegmentInput) => Promise<void>;
   onCancel: () => void;
 }
 
-export function AddRouteForm({ defaultDay, onAdd, onCancel }: Props) {
-  const [dayNumber, setDayNumber] = useState(String(defaultDay));
+export function AddRouteForm({ defaultRouteNumber, onAdd, onCancel }: Props) {
+  const [routeNumber, setRouteNumber] = useState(String(defaultRouteNumber));
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
   const [originLat, setOriginLat] = useState('');
@@ -45,14 +45,14 @@ export function AddRouteForm({ defaultDay, onAdd, onCancel }: Props) {
       distanceKm: parseFloat(distanceKm) || 0,
       estimatedDurationMin: parseInt(durationMin, 10) || 0,
       surfaceType,
-      dayNumber: Math.max(1, parseInt(dayNumber, 10) || defaultDay),
+      routeNumber: Math.max(1, parseInt(routeNumber, 10) || defaultRouteNumber),
       });
     } catch (err) {
       setSaveError(
         err instanceof ApiError && err.status === 409
           ? 'Too many saved paths: delete some first.'
           : err instanceof ApiError && err.status === 400
-            ? 'The API refused this path: check the day, places and numbers.'
+            ? 'The API refused this path: check the route number, places and numbers.'
             : 'Could not save the path (is the API running?).',
       );
       setSaving(false);
@@ -69,13 +69,13 @@ export function AddRouteForm({ defaultDay, onAdd, onCancel }: Props) {
           New route
         </div>
         <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-          Day
+          Route
           <input
             className="input w-14"
             type="number"
             min={1}
-            value={dayNumber}
-            onChange={(e) => setDayNumber(e.target.value)}
+            value={routeNumber}
+            onChange={(e) => setRouteNumber(e.target.value)}
           />
         </label>
       </div>

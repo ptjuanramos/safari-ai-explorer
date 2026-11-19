@@ -103,9 +103,8 @@ Add these as **repository** variables and secrets, not environment ones, under t
 ### 4. Provision, upload the data, deploy
 
 1. **Provision:** Actions → **Provision Azure** → Run workflow. Tick *what-if only* first if you want to see the plan. The run summary shows the site URL.
-2. **Upload the job files:** the commands are in CLAUDE.md under *Storage account*. Use `--auth-mode login`. Account keys are off, so `--account-key` and connection strings won't work. A new role assignment can take a few minutes to apply.
-3. **Import the saved paths:** run `STORAGE_ACCOUNT_URL=https://<account>.blob.core.windows.net dotnet run --project web/src/SafariExplorer.Api -- import-user-paths data`.
-4. **Deploy:** Actions → **Deploy web app** → Run workflow. After that it runs on every push to `main` that touches `web/`.
+2. **Upload the job files and the saved paths:** run `az login`, then `.\infra\upload-job-data.ps1 -UserPaths` from the repo root in PowerShell (blocked by the execution policy? `powershell -ExecutionPolicy Bypass -File .\infra\upload-job-data.ps1 -UserPaths`). `-DryRun` lists what would be uploaded. The script signs in as you, because account keys are off. You need **Storage Blob Data Contributor** and **Storage Table Data Contributor** on the account; a new role assignment can take a few minutes to apply.
+3. **Deploy:** Actions → **Deploy web app** → Run workflow. After that it runs on every push to `main` that touches `web/`.
 
 ## Changing the environment
 

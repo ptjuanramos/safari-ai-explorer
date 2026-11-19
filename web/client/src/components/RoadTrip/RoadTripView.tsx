@@ -37,7 +37,7 @@ export function RoadTripView({
   const { selectedId, select } = useSelectedSegment();
   const { paths, problem } = useDrivingRoutes(segments);
 
-  // Day N is driven on departure + N − 1, along its driving path once Google has returned one.
+  // Each route follows its driving path once Google has returned one.
   const routed = useMemo(
     () =>
       segments.map((s) => ({

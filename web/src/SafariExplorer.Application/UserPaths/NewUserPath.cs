@@ -4,7 +4,7 @@ namespace SafariExplorer.Application.UserPaths;
 
 /// <summary>A path as the user sends it, before it has an id. <see cref="Validate"/> before saving it.</summary>
 public sealed record NewUserPath(
-    int DayNumber,
+    int RouteNumber,
     string? Origin,
     string? Destination,
     IReadOnlyList<GeoPoint>? Stops,
@@ -12,7 +12,7 @@ public sealed record NewUserPath(
     double DistanceKm,
     int DurationMin)
 {
-    public const int MaxDay = 60;
+    public const int MaxRouteNumber = 60;
     public const int MaxNameLength = 120;
 
     /// <summary>Origin + destination + up to 25 stops between them, the most Google Routes takes.</summary>
@@ -22,7 +22,7 @@ public sealed record NewUserPath(
 
     /// <summary>Why the path can't be saved, or null when it can.</summary>
     public string? Validate() =>
-        DayNumber is < 1 or > MaxDay ? $"dayNumber must be between 1 and {MaxDay}"
+        RouteNumber is < 1 or > MaxRouteNumber ? $"routeNumber must be between 1 and {MaxRouteNumber}"
         : !IsName(Origin) || !IsName(Destination) ? $"origin and destination need 1 to {MaxNameLength} characters"
         : Stops is not { Count: >= 2 and <= MaxStops } ? $"send between 2 and {MaxStops} stops"
         : Stops.Any(p => !IsOnEarth(p)) ? "every stop needs a latitude in [-90, 90] and a longitude in [-180, 180]"

@@ -17,7 +17,8 @@ public sealed class TableUserPathRepository(TableClient table) : IUserPathReposi
     /// <summary>Every path belongs to one trip for now; a user or trip id would go here later.</summary>
     public const string Trip = "trip";
 
-    private const int FormatVersion = 1;
+    /// <summary>2: column <c>RouteNumber</c>. Version 1 rows held <c>DayNumber</c> and are still read.</summary>
+    private const int FormatVersion = 2;
 
     private volatile bool _tableReady;
 
@@ -85,7 +86,7 @@ public sealed class TableUserPathRepository(TableClient table) : IUserPathReposi
     internal static TableEntity ToRow(UserPath p) => new(Trip, p.Id)
     {
         ["Version"] = FormatVersion,
-        ["DayNumber"] = p.DayNumber,
+        ["RouteNumber"] = p.RouteNumber,
         ["Origin"] = p.Origin,
         ["Destination"] = p.Destination,
         ["Stops"] = JsonSerializer.Serialize(p.Stops.Select(s => new StopRow(s.Latitude, s.Longitude)), JobFiles.Json),
@@ -101,7 +102,7 @@ public sealed class TableUserPathRepository(TableClient table) : IUserPathReposi
             ?? throw new InvalidDataException("Stops is null");
         return new UserPath(
             row.RowKey,
-            Value(row.GetInt32("DayNumber"), "DayNumber"),
+            Value(row.GetInt32("RouteNumber") ?? row.GetInt32("DayNumber"), "RouteNumber"),
             Text(row, "Origin"),
             Text(row, "Destination"),
             stops.Select(s => new GeoPoint(s.Lng, s.Lat)).ToList(),

@@ -13,7 +13,7 @@ export interface NewSegmentInput {
   distanceKm: number;
   estimatedDurationMin: number;
   surfaceType: SurfaceType;
-  dayNumber?: number;
+  routeNumber?: number;
 }
 
 export function addDaysISO(iso: string, days: number): string {
@@ -66,7 +66,7 @@ export function useTripData() {
           ? { lat: input.originLat, lng: input.originLng }
           : (last?.path[last.path.length - 1] ?? end);
       const saved = await addUserPath({
-        routeNumber: input.dayNumber ?? (last?.routeNumber ?? 0) + 1,
+        routeNumber: input.routeNumber ?? (last?.routeNumber ?? 0) + 1,
         origin: input.origin,
         destination: input.destination,
         // Only the two ends: inner points are sent to Google as stops, and a straight-line midpoint could be off-road.

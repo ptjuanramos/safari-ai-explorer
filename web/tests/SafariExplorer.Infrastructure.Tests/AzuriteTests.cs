@@ -105,8 +105,23 @@ public sealed class AzuriteTests : IAsyncLifetime
         Assert.Equal(Path1().Stops, read.Stops);
 
         var row = await _table!.GetEntityAsync<TableEntity>(TableUserPathRepository.Trip, "0123abcd");
-        Assert.Equal(1, row.Value.GetInt32("Version"));
+        Assert.Equal(2, row.Value.GetInt32("Version"));
+        Assert.Equal(2, row.Value.GetInt32("RouteNumber"));
         Assert.Contains("\"lat\":-3.7167", row.Value.GetString("Stops"));
+    }
+
+    [SkippableFact]
+    public async Task A_version_1_row_with_DayNumber_still_reads_as_the_route_number()
+    {
+        var repository = new TableUserPathRepository(NewTable());
+        await repository.SaveAsync(Path1(), CancellationToken.None);
+        var row = (await _table!.GetEntityAsync<TableEntity>(TableUserPathRepository.Trip, "0123abcd")).Value;
+        row.Remove("RouteNumber");
+        row["DayNumber"] = 3;
+        row["Version"] = 1;
+        await _table.UpdateEntityAsync(row, Azure.ETag.All, TableUpdateMode.Replace);
+
+        Assert.Equal(3, Assert.Single(await repository.ListAsync(CancellationToken.None)).RouteNumber);
     }
 
     [SkippableFact]

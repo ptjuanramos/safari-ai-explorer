@@ -9,8 +9,8 @@ public sealed class UserPathUseCaseTests
 {
     private static readonly DateTimeOffset Now = new(2026, 11, 18, 9, 30, 0, TimeSpan.Zero);
 
-    private static NewUserPath Draft(int day = 1, string surface = "gravel", IReadOnlyList<GeoPoint>? stops = null) =>
-        new(day, " Tarangire Gate ", "Silale Swamp",
+    private static NewUserPath Draft(int route = 1, string surface = "gravel", IReadOnlyList<GeoPoint>? stops = null) =>
+        new(route, " Tarangire Gate ", "Silale Swamp",
             stops ?? [new GeoPoint(36.0167, -3.7167), new GeoPoint(36.08, -4.0)], surface, 42.5, 95);
 
     [Fact]
@@ -71,8 +71,8 @@ public sealed class UserPathUseCaseTests
 
     public static TheoryData<NewUserPath> InvalidDrafts() =>
     [
-        Draft(day: 0),
-        Draft(day: NewUserPath.MaxDay + 1),
+        Draft(route: 0),
+        Draft(route: NewUserPath.MaxRouteNumber + 1),
         Draft(surface: "tarmac"),
         Draft(stops: [new GeoPoint(36.0, -3.7)]),
         Draft(stops: [new GeoPoint(36.0, -3.7), new GeoPoint(36.0, -91)]),

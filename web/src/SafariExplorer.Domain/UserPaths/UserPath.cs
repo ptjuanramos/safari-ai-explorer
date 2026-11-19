@@ -8,7 +8,7 @@ namespace SafariExplorer.Domain.UserPaths;
 /// </summary>
 public sealed record UserPath(
     string Id,
-    int DayNumber,
+    int RouteNumber,
     string Origin,
     string Destination,
     IReadOnlyList<GeoPoint> Stops,
