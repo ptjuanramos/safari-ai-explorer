@@ -1,0 +1,78 @@
+@host = http://localhost:5201
+
+# Each park with road-risk data and its newest rain day.
+GET {{host}}/api/road-risk/places
+Accept: application/json
+
+###
+
+GET {{host}}/api/road-risk/dates
+Accept: application/json
+
+###
+
+GET {{host}}/api/road-risk/2026-11-15
+Accept: application/json
+
+###
+
+# Risk along each route, from the newest run on or before the date (a run up to 7 days older for a past date).
+# Scored against every park with data; add ?place=<slug> for one.
+POST {{host}}/api/road-risk/routes
+Content-Type: application/json
+
+{
+  "date": "2026-11-18",
+  "routes": [
+    { "id": "day-1", "path": [ { "lat": -3.70, "lng": 36.00 }, { "lat": -3.65, "lng": 36.02 } ] }
+  ]
+}
+
+###
+
+# 503 until GOOGLE_MAPS_API_KEY (Routes API + Roads API) is set on the API.
+POST {{host}}/api/directions
+Content-Type: application/json
+
+{
+  "origin": { "lat": -3.7167, "lng": 36.0167 },
+  "destination": { "lat": -3.3833, "lng": 35.8333 }
+}
+
+###
+
+GET {{host}}/api/sightings/latest
+Accept: application/json
+
+###
+
+GET {{host}}/api/sightings/lion/5000/0/0
+Accept: application/json
+
+###
+
+GET {{host}}/api/user-paths
+Accept: application/json
+
+###
+
+# Saved as DATA_DIR/user-paths/<id>.json (ADR-0003). Stops: origin first, destination last.
+POST {{host}}/api/user-paths
+Content-Type: application/json
+
+{
+  "dayNumber": 1,
+  "origin": "Tarangire Gate",
+  "destination": "Silale Swamp",
+  "stops": [{ "lat": -3.7167, "lng": 36.0167 }, { "lat": -4.0, "lng": 36.08 }],
+  "surfaceType": "track",
+  "distanceKm": 42.5,
+  "durationMin": 95
+}
+
+###
+
+# Use an id from the list above.
+DELETE {{host}}/api/user-paths/00000000000000000000000000000000
+
+###

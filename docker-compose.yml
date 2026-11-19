@@ -1,0 +1,70 @@
+x-job: &job
+  build: ./jobs
+  image: safari-explorer-jobs
+  restart: "no"
+  environment:
+    DATA_DIR: /data
+    CACHE_DIR: /cache
+    EE_PROJECT: ${EE_PROJECT:-}
+  volumes:
+    - safari-data:/data
+    - safari-cache:/cache
+    - ${EE_CREDENTIALS_DIR:-./.earthengine}:/root/.config/earthengine:ro
+
+services:
+  road-risk-refresh:
+    <<: *job
+    entrypoint: ["road-risk-refresh"]
+
+  sightings-refresh:
+    <<: *job
+    entrypoint: ["sightings-refresh"]
+
+  road-risk-backfill:
+    <<: *job
+    entrypoint: ["road-risk-backfill"]
+    profiles: ["manual"]
+
+  web:
+    build: ./web
+    image: safari-explorer-web
+    ports:
+      - "8080:8080"
+    environment:
+      DATA_DIR: /data
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+      # Files (default) reads the volume below; Azure reads the storage account (ADR-0004). Inside Docker there is no
+      # az login, so Azure needs AZURE_STORAGE_CONNECTION_STRING (for Azurite here:
+      # DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=<Azurite's well-known key>;
+      # BlobEndpoint=http://azurite:10000/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1).
+      STORAGE_KIND: ${STORAGE_KIND:-Files}
+      AZURE_STORAGE_CONNECTION_STRING: ${AZURE_STORAGE_CONNECTION_STRING:-}
+      STORAGE_ACCOUNT_URL: ${STORAGE_ACCOUNT_URL:-}
+    volumes:
+      # The jobs' runs: read-only (ADR-0002).
+      - safari-data:/data:ro
+      # The user's saved paths: only this folder of the volume is writable (ADR-0003).
+      # Create it once: docker run --rm -v safari-data:/data alpine mkdir -p /data/user-paths
+      - type: volume
+        source: safari-data
+        target: /data/user-paths
+        volume:
+          subpath: user-paths
+
+  # The Azure Storage emulator (blob 10000, table 10002), for the Azurite tests and trying Storage:Kind=Azure locally.
+  # docker compose --profile azurite up -d azurite
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.35.0
+    command: ["azurite", "--blobHost", "0.0.0.0", "--tableHost", "0.0.0.0", "--location", "/data", "--skipApiVersionCheck"]
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+    volumes:
+      - ./.azurite:/data
+    profiles: ["azurite"]
+
+volumes:
+  safari-data:
+    external: true
+  safari-cache:
+    external: true

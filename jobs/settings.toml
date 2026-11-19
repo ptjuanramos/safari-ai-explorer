@@ -1,0 +1,28 @@
+# Application settings for the jobs. Override the path with --settings or SETTINGS_FILE.
+
+[road_risk]
+# OSM place names (geocoded by Nominatim, roads from Overpass). Each place gets its own road network and its own
+# run folder, data/road-risk/<slug>/. --place / PLACE limits a run to one of them (or any other place name).
+places = [
+    "Serengeti National Park, Tanzania",
+    "Ngorongoro Conservation Area, Tanzania",
+    "Tarangire National Park, Tanzania",
+    "Lake Manyara National Park, Tanzania",
+    "Arusha National Park, Tanzania",
+]
+
+[sightings]
+# GBIF classKey of the group whose records form the visitor-effort baseline (359 = Mammalia).
+taxon_key = 359
+# Box as west, south, east, north (degrees). Covers all of Tanzania, plus border strips of its neighbours
+# (records are filtered by coordinates, not country, so the Masai Mara stays in).
+bounds = [29.3, -11.8, 40.5, -0.95]
+start_year = 2017
+
+# Species on the map: name = GBIF speciesKey. The name is used in file names and the API.
+[sightings.species]
+buffalo = 2441034
+elephant = 2435350
+lion = 5219404
+cheetah = 2435270
+leopard = 5219436

@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SafariExplorer.Api/SafariExplorer.Api.csproj" />
+    <Project Path="src/SafariExplorer.Application/SafariExplorer.Application.csproj" />
+    <Project Path="src/SafariExplorer.Domain/SafariExplorer.Domain.csproj" />
+    <Project Path="src/SafariExplorer.Infrastructure/SafariExplorer.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SafariExplorer.Api.Tests/SafariExplorer.Api.Tests.csproj" />
+    <Project Path="tests/SafariExplorer.Application.Tests/SafariExplorer.Application.Tests.csproj" />
+    <Project Path="tests/SafariExplorer.Infrastructure.Tests/SafariExplorer.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

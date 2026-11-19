@@ -7,19 +7,34 @@ build/
 .venv/
 venv/
 .env
+.earthengine/
 
 .ipynb_checkpoints/
 
 cache/
 data/
+
+# Azurite (the local Azure Storage emulator): its data folder in Docker, and its files when run from npm
+.azurite/
+__azurite_db_*.json
+__blobstorage__/
+__queuestorage__/
 *.parquet
 *.csv
 *.tif
 *.tiff
 *.nc
 
+bin/
+obj/
+node_modules/
+TestResults/
+
 .idea/
 .vscode/
+.vs/
 .DS_Store
 Thumbs.db
 .claude/settings.local.json
+
+.fake

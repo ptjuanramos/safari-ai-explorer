@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "safari-explorer-jobs"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "earthengine-api",
+    "geopandas",
+    "numpy",
+    "osmnx",
+    "pandas",
+    "pyarrow",
+    "pyproj",
+    "requests",
+    "scipy",
+    "shapely>=2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[project.scripts]
+sightings-refresh = "jobs.sightings.refresh:main"
+road-risk-refresh = "jobs.road_risk.refresh:main"
+road-risk-backfill = "jobs.road_risk.backfill:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "--import-mode=importlib"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
