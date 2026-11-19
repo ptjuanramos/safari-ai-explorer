@@ -1,0 +1,68 @@
+name: Provision Azure
+
+on:
+  workflow_dispatch:
+    inputs:
+      what_if_only:
+        description: Only show what would change, don't deploy
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write # lets azure/login swap GitHub's OIDC token for an Azure one (no stored password)
+  contents: read
+
+concurrency:
+  group: provision
+  cancel-in-progress: false
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    # No `environment:` here: it would change the OIDC subject to repo:<repo>:environment:<name>, and Azure's federated
+    # credential trusts the branch, repo:<repo>:ref:refs/heads/main. So the workflow signs in only when run from main.
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Sign in to Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      # main.bicep runs at subscription scope, so it can create the resource group named in main.bicepparam. A
+      # subscription deployment also needs a region for its own record; it's the same `location` as the resources.
+      - name: Read the region from main.bicepparam
+        id: params
+        run: |
+          location=$(az bicep build-params --file infra/main.bicepparam --stdout | jq -r '.parametersJson | fromjson | .parameters.location.value')
+          echo "location=$location" >> "$GITHUB_OUTPUT"
+
+      - name: What would change
+        run: >
+          az deployment sub what-if
+          --name safari-ai-explorer
+          --location "${{ steps.params.outputs.location }}"
+          --parameters infra/main.bicepparam
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          AZURE_DATA_UPLOADER_ID: ${{ vars.AZURE_DATA_UPLOADER_ID }}
+
+      - name: Deploy infra/main.bicep
+        if: ${{ !inputs.what_if_only }}
+        run: |
+          az deployment sub create \
+            --name safari-ai-explorer \
+            --location "${{ steps.params.outputs.location }}" \
+            --parameters infra/main.bicepparam \
+            --query properties.outputs -o json > outputs.json
+          {
+            echo "### Azure environment"
+            echo "- Resource group: $(jq -r .resourceGroupName.value outputs.json)"
+            echo "- Site: $(jq -r .webAppUrl.value outputs.json)"
+            echo "- Storage account: $(jq -r .storageAccountUrl.value outputs.json)"
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          AZURE_DATA_UPLOADER_ID: ${{ vars.AZURE_DATA_UPLOADER_ID }}

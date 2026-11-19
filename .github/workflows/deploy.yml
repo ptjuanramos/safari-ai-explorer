@@ -1,0 +1,95 @@
+name: Deploy web app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - web/**
+      - .github/workflows/deploy.yml
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 11.0.x
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/client/package-lock.json
+
+      - name: .NET tests
+        run: dotnet test web --configuration Release
+
+      - name: Build the SPA
+        working-directory: web/client
+        run: |
+          npm ci
+          npm run build
+        env:
+          VITE_GOOGLE_MAPS_BROWSER_KEY: ${{ secrets.VITE_GOOGLE_MAPS_BROWSER_KEY }}
+
+      - name: Publish the API with the SPA
+        run: |
+          dotnet publish web/src/SafariExplorer.Api --configuration Release --output publish
+          mkdir -p publish/wwwroot
+          cp -r web/client/dist/. publish/wwwroot/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: publish
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # No `environment:` here: it would change the OIDC subject to repo:<repo>:environment:<name>, and Azure's federated
+    # credential trusts the branch, repo:<repo>:ref:refs/heads/main.
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: infra
+
+      - name: Read the web app name from main.bicepparam
+        id: params
+        run: |
+          name=$(az bicep build-params --file infra/main.bicepparam --stdout | jq -r '.parametersJson | fromjson | .parameters.webAppName.value')
+          echo "webAppName=$name" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: site
+
+      - name: Sign in to Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to App Service
+        id: deploy
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ steps.params.outputs.webAppName }}
+          package: site
+
+      - name: Summary
+        run: echo "Deployed to ${{ steps.deploy.outputs.webapp-url }}" >> "$GITHUB_STEP_SUMMARY"

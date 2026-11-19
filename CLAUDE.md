@@ -26,16 +26,6 @@ Open issues live in [README.md](README.md). Coding conventions live in [docs/con
 - **The road risk is a rule-based model**, not a trained one. The road weights and rain thresholds are hand-set by the user, so treat them as the user's design decisions.
 - **Honesty:** GBIF records are visitor-biased and the road risk is unvalidated. Say what a map can and can't show.
 
-## Architecture decisions
-
-ADRs live in `docs/decisions/`. Read them before making any spatial or storage choice.
-
-| ADR | Summary |
-|-----|---------|
-| [0001](docs/decisions/0001-metric-coordinate-system.md) | Always use EPSG:32736 (UTM zone 36S, meters) for spatial ops, never degrees |
-| [0002](docs/decisions/0002-job-outputs-as-files.md) | Jobs write versioned files + manifest to a shared volume; the API reads them through repositories that return domain models |
-| [0003](docs/decisions/0003-user-paths-written-by-the-api.md) | The API saves user paths as one JSON file each in `DATA_DIR/user-paths/`; in Docker only that sub-folder is writable |
-| [0004](docs/decisions/0004-job-data-in-blob-storage-user-paths-in-table-storage.md) | `Storage:Kind` = `Azure`: the job files are read from blob container `job-data` (same keys as the folders), saved paths are rows in table `userpaths`; `Files` (default) keeps 0002/0003 |
 
 The file formats are in [docs/data-contract.md](docs/data-contract.md). Change the Python writer and the .NET reader together.
 
@@ -47,6 +37,9 @@ web/                   .NET 11 solution (SafariExplorer.slnx) + client/
 docs/                  ADRs, conventions, data contract
 data/                  job output (git-ignored), mounted as the shared volume
 docker-compose.yml     road-risk-refresh, sightings-refresh, road-risk-backfill (manual), web
+infra/                 main.bicep (subscription scope: resource group) → resources.bicep (storage account + App Service);
+                       the names and SKU in main.bicepparam; one-time setup in infra/README.md
+.github/workflows/     provision.yml (by hand: what-if + Bicep deploy), deploy.yml (push to main under web/: test, build, deploy)
 ```
 
 ### Python (`jobs/src/jobs/`)
@@ -163,7 +156,8 @@ dotnet test web
   - **Azurite** (local Azure Storage emulator, data in `.azurite/`, git-ignored): `docker compose --profile azurite up -d azurite` (blob 10000, table 10002). The `AzuriteTests` run only while it's up.
   - `web` takes `STORAGE_KIND`, `AZURE_STORAGE_CONNECTION_STRING`, `STORAGE_ACCOUNT_URL` from `.env` (default `Files`). There is no `az login` in the container, so `Azure` there needs a connection string.
   - **Later:** scheduling the refresh jobs (host cron or a scheduler container; suggested: `road-risk-refresh` 2 to 4 times a day, `sightings-refresh` weekly), and an Earth Engine service-account key instead of the mounted credentials.
-- **Storage account (ADR-0004):** the account, container `job-data` and table `userpaths` are created by hand. Uploading needs **Storage Blob Data Contributor**, and the API needs **Storage Blob Data Reader** on the container and **Storage Table Data Contributor** on the table.
+- **Azure environment (ADR-0005):** `infra/main.bicep` creates the account, container `job-data`, table `userpaths`, the App Service and the role assignments; run it with the **Provision Azure** workflow, and **Deploy web app** ships `web/` on each push to `main`. One-time setup (resource group, GitHub OIDC identity, variables and secrets) in [infra/README.md](infra/README.md).
+- **Storage account (ADR-0004):** shared-key access is off, so use `--auth-mode login` (connection strings only work for Azurite). Uploading needs **Storage Blob Data Contributor** (Bicep gives it to `AZURE_DATA_UPLOADER_ID`), and the web app's identity gets **Storage Blob Data Reader** on the container and **Storage Table Data Contributor** on the table.
   - Upload the job files (same layout; skip `user-paths/`): `az storage blob upload-batch -d job-data -s data/road-risk --destination-path road-risk --account-name <account> --auth-mode login`, and the same for `data/sightings/<run>` and `data/sightings/latest.json` (`az storage blob upload`). Upload the run before `latest.json`, as the jobs write them.
   - Copy the saved paths once: `dotnet run --project web/src/SafariExplorer.Api -- import-user-paths data` with `STORAGE_ACCOUNT_URL` (or the connection string) set. Running it again replaces the same rows.
 - **Earth Engine:** `ee.Authenticate()` once; the jobs then call `ee.Initialize(project=...)` with `--ee-project` / `EE_PROJECT`.
