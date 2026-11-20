@@ -10,8 +10,8 @@ export default function App() {
   const [date, setDate] = useState(todayUtc);
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-background text-foreground">
-      <nav className="flex h-12 shrink-0 items-center gap-6 border-b border-border bg-card px-5">
+    <div className="flex h-dvh w-full flex-col overflow-hidden bg-background text-foreground">
+      <nav className="flex h-10 shrink-0 items-center gap-6 border-b border-border bg-card px-4 md:h-12 md:px-5">
         <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">Safari Explorer</span>
       </nav>
 

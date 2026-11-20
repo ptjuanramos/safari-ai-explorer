@@ -15,6 +15,8 @@ interface Props {
   /** Saves the path; rejects when the API refuses it. */
   onAddSegment: (input: NewSegmentInput) => Promise<void>;
   onRemoveSegment: (id: string) => Promise<void>;
+  /** Hides the list (the map then gets the whole width). */
+  onClose: () => void;
 }
 
 export function ItinerarySidebar({
@@ -27,6 +29,7 @@ export function ItinerarySidebar({
   error,
   onAddSegment,
   onRemoveSegment,
+  onClose,
 }: Props) {
   const [adding, setAdding] = useState(false);
 
@@ -44,14 +47,25 @@ export function ItinerarySidebar({
   const defaultRouteNumber = Math.max(1, maxRounterNumber + 1);
 
   return (
-    <aside className="flex h-full w-[340px] shrink-0 flex-col border-r border-border bg-sidebar">
-      <div className="border-b border-border px-5 py-4">
-        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
-          Your trip
+    <aside className="flex h-full w-full shrink-0 flex-col border-r border-border bg-sidebar md:w-[340px]">
+      <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
+        <div className="min-w-0">
+          <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+            Your trip
+          </div>
+          <h1 className="mt-1 text-base font-bold leading-tight text-sidebar-foreground">
+            {trip?.title ?? 'Loading trip…'}
+          </h1>
         </div>
-        <h1 className="mt-1 text-base font-bold leading-tight text-sidebar-foreground">
-          {trip?.title ?? 'Loading trip…'}
-        </h1>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Hide the route list"
+          title="Hide the route list"
+          className="-mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          ✕
+        </button>
       </div>
 
       <div className="border-b border-border px-4 py-3">
@@ -75,7 +89,7 @@ export function ItinerarySidebar({
         )}
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+      <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         {loading && <p className="px-1 text-xs text-muted-foreground">Loading saved paths…</p>}
         {error && <p className="px-1 text-xs text-destructive">{error}</p>}
         {!loading && !error && segments.length === 0 && (

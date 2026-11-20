@@ -9,7 +9,7 @@ interface Props {
 
 export function SegmentDetailCard({ segment, prediction, onClose }: Props) {
   return (
-    <div className="pointer-events-auto absolute right-4 top-4 z-20 w-80 rounded-2xl border border-border bg-card/95 p-4 shadow-2xl backdrop-blur">
+    <div className="pointer-events-auto absolute inset-x-3 bottom-[4.5rem] z-20 max-h-[55%] overflow-y-auto rounded-2xl border border-border bg-card/95 p-4 shadow-2xl backdrop-blur sm:inset-x-auto sm:bottom-auto sm:right-4 sm:top-4 sm:max-h-[calc(100%-7rem)] sm:w-80">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">

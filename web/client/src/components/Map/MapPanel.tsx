@@ -70,6 +70,9 @@ export function MapPanel({ segments, predictions, selectedId, onSelect, networkR
             position: google.maps.ControlPosition.RIGHT_CENTER,
           },
           mapTypeControl: true,
+          mapTypeControlOptions: window.matchMedia('(min-width: 640px)').matches
+            ? undefined
+            : { style: google.maps.MapTypeControlStyle.DROPDOWN_MENU, position: google.maps.ControlPosition.LEFT_BOTTOM },
           mapTypeId: 'terrain',
           streetViewControl: false,
           fullscreenControl: false,
@@ -242,9 +245,9 @@ export function MapPanel({ segments, predictions, selectedId, onSelect, networkR
         />
       )}
 
-      <div className="pointer-events-none absolute bottom-24 left-4 z-10 rounded-lg border border-border bg-card/90 p-3 text-xs shadow-md backdrop-blur">
-        <div className="mb-1.5 font-semibold text-foreground">Surface risk</div>
-        <div className="mb-1 text-[10px] text-muted-foreground">Rule-based from recent rain, unvalidated</div>
+      <div className="pointer-events-none absolute bottom-[4.5rem] left-3 z-10 rounded-lg border border-border bg-card/90 p-2 text-[10px] shadow-md backdrop-blur sm:bottom-24 sm:left-4 sm:p-3 sm:text-xs">
+        <div className="mb-1 font-semibold text-foreground sm:mb-1.5">Surface risk</div>
+        <div className="mb-1 hidden text-[10px] text-muted-foreground sm:block">Rule-based from recent rain, unvalidated</div>
         <div className="flex items-center gap-1.5">
           <span className="h-2 w-6 rounded-full bg-condition-good" /> Low (up to 30%)
         </div>

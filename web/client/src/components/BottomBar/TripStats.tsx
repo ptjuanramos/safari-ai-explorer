@@ -15,8 +15,8 @@ export function TripStats({ segments, predictions }: Props) {
 
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-border bg-card/95 px-6 py-3 backdrop-blur">
-      <div className="grid grid-cols-4 gap-6">
+    <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-border bg-card/95 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur sm:px-6 sm:py-3">
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-6">
         <Stat label="Total distance" value={`${totalKm} km`} />
         <Stat
           label="Drive time"
@@ -47,11 +47,11 @@ function Stat({
 }) {
   return (
     <div>
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="truncate text-[9px] font-semibold uppercase tracking-wider text-muted-foreground sm:text-[10px]">
         {label}
       </div>
       <div
-        className={`mt-0.5 text-lg font-bold ${
+        className={`mt-0.5 text-base font-bold sm:text-lg ${
           tone === 'warn'
             ? 'text-condition-warn-foreground'
             : tone === 'good'
@@ -61,7 +61,7 @@ function Stat({
       >
         {value}
       </div>
-      {hint && <div className="text-[11px] text-muted-foreground">{hint}</div>}
+      {hint && <div className="hidden text-[11px] text-muted-foreground sm:block">{hint}</div>}
     </div>
   );
 }

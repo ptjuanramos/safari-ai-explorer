@@ -18,7 +18,7 @@ export function SightingsPanel({ run, error, species, onSpecies, layer, loadingT
   const precise = species ? (layer?.speciesRecords[species] ?? 0) : 0;
 
   return (
-    <div className="pointer-events-auto absolute left-4 top-4 z-10 max-h-[calc(100%-12rem)] w-72 overflow-y-auto rounded-xl border border-border bg-card/95 p-3 text-xs shadow-lg backdrop-blur">
+    <div className="pointer-events-auto absolute left-3 top-3 z-10 max-h-[45%] w-[calc(100%-5rem)] overflow-y-auto rounded-xl border border-border bg-card/95 p-3 text-xs shadow-lg backdrop-blur sm:left-4 sm:top-4 sm:max-h-[calc(100%-12rem)] sm:w-72">
       <div className="flex items-center justify-between gap-2">
         <div className="font-semibold text-foreground">Where visitors see wildlife</div>
         {loadingTiles > 0 && <span className="text-[10px] text-muted-foreground">Loading {loadingTiles}…</span>}
