@@ -36,6 +36,7 @@ public sealed class BufferRouteMatcherTests
         Assert.Equal(0.4, risk.MeanSurfaceRisk!.Value, tolerance: 0.005);
         Assert.Equal(0.6, risk.MaxSurfaceRisk);
         Assert.Equal(20, risk.MaxRainIndexMm);
+        Assert.Equal(["along-primary", "along-track"], risk.MatchedEdgeIds.Order(StringComparer.Ordinal));
         Assert.InRange(risk.RouteLengthM, 2_200, 2_240);
         Assert.InRange(risk.Coverage, 0.99, 1.0);
     }

@@ -22,6 +22,12 @@ public sealed record RouteRisk(
 
     /// <summary>Slugs of the places (parks) whose roads the route runs along; empty when none matched.</summary>
     public IReadOnlyList<string> Places { get; init; } = [];
+
+    /// <summary>
+    /// Ids of the edges that lie along the route, so the places follow from one match over every park's roads.
+    /// Not sent to the UI.
+    /// </summary>
+    public IReadOnlyList<string> MatchedEdgeIds { get; init; } = [];
 }
 
 /// <summary>The risk of several routes, computed from one road-risk run per place (park).</summary>

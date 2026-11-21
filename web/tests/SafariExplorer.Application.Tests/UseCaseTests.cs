@@ -51,6 +51,8 @@ public sealed class UseCaseTests
         Assert.Equal(["park-b"], report.Routes.Single(r => r.Id == "b").Places);
         Assert.Empty(report.Routes.Single(r => r.Id == "c").Places);
         Assert.Equal(1, report.Routes.Single(r => r.Id == "a").MatchedEdges);
+        // One match over every park's roads, not one more per park.
+        Assert.Single(matcher.Networks);
     }
 
     [Fact]
@@ -201,8 +203,11 @@ public sealed class UseCaseTests
             Networks.Add(network);
             return routes.Select(r =>
             {
-                var matched = network.Count(s => s.Id.StartsWith(r.Id + "-", StringComparison.Ordinal));
-                return new RouteRisk(r.Id, 1000, matched * 100, matched, matched > 0 ? 0.4 : null, null, null, []);
+                var ids = network.Where(s => s.Id.StartsWith(r.Id + "-", StringComparison.Ordinal)).Select(s => s.Id).ToList();
+                return new RouteRisk(r.Id, 1000, ids.Count * 100, ids.Count, ids.Count > 0 ? 0.4 : null, null, null, [])
+                {
+                    MatchedEdgeIds = ids,
+                };
             }).ToList();
         }
     }

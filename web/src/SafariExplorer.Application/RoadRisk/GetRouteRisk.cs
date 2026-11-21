@@ -35,7 +35,7 @@ public sealed class GetRouteRisk(IRoadRiskRepository repository, IRouteMatcher m
         // the same in both, so each edge is matched once and isn't counted twice.
         var network = snapshots.SelectMany(s => s.Segments).DistinctBy(s => s.Id).ToList();
         var risks = matcher.Match(network, routes);
-        var placesByRoute = PlacesByRoute(snapshots, routes, risks);
+        var placesByRoute = PlacesByRoute(snapshots, risks);
         return new RouteRiskReport(
             snapshots.Select(s => s.Run).ToList(),
             date,
@@ -43,23 +43,35 @@ public sealed class GetRouteRisk(IRoadRiskRepository repository, IRouteMatcher m
     }
 
     /// <summary>Per route id, the places whose roads it touches, so the UI can tell which run's rain day applies.</summary>
-    /// <remarks>With one place that's every matched route; with several, each place's roads are matched on their own.</remarks>
-    private Dictionary<string, List<string>> PlacesByRoute(
-        List<RoadRiskSnapshot> snapshots, IReadOnlyList<TripRoute> routes, IReadOnlyList<RouteRisk> merged)
+    /// <remarks>
+    /// With one place that's every matched route. With several, a route touches a place when one of its matched edges
+    /// is that place's: from the one match over every park, since matching each park again was most of the time.
+    /// </remarks>
+    private static Dictionary<string, List<string>> PlacesByRoute(
+        List<RoadRiskSnapshot> snapshots, IReadOnlyList<RouteRisk> risks)
     {
-        var placesByRoute = new Dictionary<string, List<string>>();
+        // A border road shared by two parks has the same id in both, so it belongs to both.
+        var placesByEdge = new Dictionary<string, HashSet<string>>();
         foreach (var snapshot in snapshots)
         {
-            var risks = snapshots.Count == 1 ? merged : matcher.Match(snapshot.Segments, routes);
-            foreach (var risk in risks.Where(r => r.MatchedEdges > 0))
+            foreach (var segment in snapshot.Segments)
             {
-                if (!placesByRoute.TryGetValue(risk.Id, out var list))
+                if (!placesByEdge.TryGetValue(segment.Id, out var set))
                 {
-                    placesByRoute[risk.Id] = list = [];
+                    placesByEdge[segment.Id] = set = [];
                 }
 
-                list.Add(snapshot.Run.Place);
+                set.Add(snapshot.Run.Place);
             }
+        }
+
+        var placesByRoute = new Dictionary<string, List<string>>();
+        foreach (var risk in risks.Where(r => r.MatchedEdges > 0))
+        {
+            var touched = risk.MatchedEdgeIds.SelectMany(id => placesByEdge.GetValueOrDefault(id) ?? []).ToHashSet();
+            placesByRoute[risk.Id] = snapshots.Count == 1
+                ? [snapshots[0].Run.Place]
+                : snapshots.Select(s => s.Run.Place).Where(touched.Contains).ToList();
         }
 
         return placesByRoute;

@@ -1,4 +1,5 @@
 using NetTopologySuite.Geometries;
+using NetTopologySuite.Geometries.Prepared;
 using NetTopologySuite.Index.Strtree;
 using SafariExplorer.Application.Abstractions;
 using SafariExplorer.Domain.RoadRisk;
@@ -53,10 +54,29 @@ public sealed class BufferRouteMatcher : IRouteMatcher
             return new RouteRisk(route.Id, 0, 0, 0, null, null, null, []);
         }
 
+        // Candidates: the edges near each piece of the route, not every edge in the route's bounding box (a long
+        // diagonal drive's box covers most of a park).
+        var coordinates = line.Coordinates;
+        var candidates = new SortedSet<int>();
+        for (var i = 1; i < coordinates.Length; i++)
+        {
+            var near = new Envelope(coordinates[i - 1], coordinates[i]);
+            near.ExpandBy(ToleranceM);
+            foreach (var candidate in index.Query(near))
+            {
+                candidates.Add(candidate);
+            }
+        }
+
+        // The prepared buffer answers "touches?" and "fully inside?" from an index; only the edges that cross its
+        // outline need the full intersection.
         var buffer = line.Buffer(ToleranceM);
-        var matched = index.Query(buffer.EnvelopeInternal)
-            .Select(i => (edges[i].Segment, Inside: edges[i].Line!.Intersection(buffer).Length,
-                Length: edges[i].Line!.Length))
+        var prepared = PreparedGeometryFactory.Prepare(buffer);
+        var matched = candidates
+            .Select(i => edges[i])
+            .Where(e => prepared.Intersects(e.Line!))
+            .Select(e => (e.Segment, Inside: prepared.Covers(e.Line!) ? e.Line!.Length : e.Line!.Intersection(buffer).Length,
+                Length: e.Line!.Length))
             .Where(m => m.Length > 0 && m.Inside / m.Length >= MinShareInside)
             .ToList();
         if (matched.Count == 0)
@@ -74,6 +94,9 @@ public sealed class BufferRouteMatcher : IRouteMatcher
             MeanSurfaceRisk: matched.Sum(m => m.Segment.SurfaceRisk * m.Inside) / matchedLength,
             MaxSurfaceRisk: matched.Max(m => m.Segment.SurfaceRisk),
             MaxRainIndexMm: rain.Count > 0 ? rain.Max() : null,
-            RoadTypes: matched.Select(m => m.Segment.RoadType).Distinct().Order().ToList());
+            RoadTypes: matched.Select(m => m.Segment.RoadType).Distinct().Order().ToList())
+        {
+            MatchedEdgeIds = matched.Select(m => m.Segment.Id).ToList(),
+        };
     }
 }
